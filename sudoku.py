@@ -107,48 +107,106 @@ def solve_cell_sudoku(sudoku_cells):
     while not is_correct:
         if row_index > 8:
             return sudoku_cells
-        print(row_index, column_index)
+
+        def get_candidate(candidates, message):
+            candidate = choice(candidates)
+            logging.debug(f"{message}can: {candidate}")
+            return candidate
+
         cell = sudoku_cells[row_index][column_index]
         unused_candidates = cell.get_unused()
+
+        if len(unused_candidates) != 0:
+            candidate = get_candidate(unused_candidates, )
 
         if len(cell.candidates) == 1:
             if direction_forward:
                 row_index, column_index = get_next_indexes(row_index, column_index)
+                logging.debug(f"filled cell, dir:{direction_forward}")
             else:
                 row_index, column_index = get_prev_indexes(row_index, column_index)
+                logging.debug(f"filled cell, dir:{direction_forward}")
             continue
 
         if direction_forward:
-            # 1. Куда попадает исходно заполненная ячейка?
-
-            if len(unused_candidates) >= 1:
-                candidate = choice(unused_candidates)
-                cell.use(candidate)
-                exclude(sudoku_cells, candidate, row_index, column_index)
-                row_index, column_index = get_next_indexes(row_index, column_index)
-            else:
-                cell.refresh_all([State.Expire, State.Used])
-                row_index, column_index = get_prev_indexes(row_index, column_index)
-                direction_forward = False
-
+            row_index, column_index, direction_forward = moving_forward(sudoku_cells, candidate, unused_candidates,
+                                                                        cell, row_index, column_index,
+                                                                        direction_forward)
         else:
+            row_index, column_index, direction_forward = moving_backwards(sudoku_cells, candidate, unused_candidates,
+                                                                          cell, row_index, column_index,
+                                                                          direction_forward)
+        # if direction_forward:
+        #     # 1. Куда попадает исходно заполненная ячейка?
+        #
+        #     if len(unused_candidates) >= 1:
+        #         candidate = choice(unused_candidates)
+        #         cell.use(candidate)
+        #         exclude(sudoku_cells, candidate, row_index, column_index)
+        #         row_index, column_index = get_next_indexes(row_index, column_index)
+        #     else:
+        #         cell.refresh_all([State.Expire, State.Used])
+        #         row_index, column_index = get_prev_indexes(row_index, column_index)
+        #         direction_forward = False
+        #
+        # else:
+        #
+        #     if len(unused_candidates) >= 1:
+        #         candidate = choice(unused_candidates)
+        #         old_candidate = cell.change_used(candidate)
+        #
+        #         append(sudoku_cells, old_candidate, row_index, column_index)
+        #         exclude(sudoku_cells, candidate, row_index, column_index)
+        #
+        #         direction_forward = True
+        #         row_index, column_index = get_next_indexes(row_index, column_index)
+        #     else:
+        #         candidate = cell.current()
+        #         append(sudoku_cells, candidate, row_index, column_index)
+        #
+        #         cell.refresh_all([State.Expire, State.Used])
+        #
+        #         row_index, column_index = get_prev_indexes(row_index, column_index)
 
-            if len(unused_candidates) >= 1:
-                candidate = choice(unused_candidates)
-                old_candidate = cell.change_used(candidate)
 
-                append(sudoku_cells, old_candidate, row_index, column_index)
-                exclude(sudoku_cells, candidate, row_index, column_index)
+def moving_forward(sudoku_cells, candidate: int, unused_candidates: list,
+                   cell: Cell, row_index: int, column_index: int, direction_forward:bool) -> Tuple[int, int, bool]:
+    if len(unused_candidates) >= 1:
+        cell.use(candidate)
+        exclude(sudoku_cells, candidate, row_index, column_index)
+        row_index, column_index = get_next_indexes(row_index, column_index)
+        logging.debug(f"can:{candidate}: r:{row_index} c:{column_index} cell:{cell} dir:{direction_forward}")
+    else:
+        cell.refresh_all([State.Expire, State.Used])
+        direction_forward = False
+        logging.debug(f"can:{candidate}: r:{row_index} c:{column_index} cell:{cell} dir:{direction_forward}")
 
-                direction_forward = True
-                row_index, column_index = get_next_indexes(row_index, column_index)
-            else:
-                candidate = cell.current()
-                append(sudoku_cells, candidate, row_index, column_index)
+        row_index, column_index = get_prev_indexes(row_index, column_index)
 
-                cell.refresh_all([State.Expire, State.Used])
+    return (row_index, column_index, direction_forward)
 
-                row_index, column_index = get_prev_indexes(row_index, column_index)
+
+def moving_backwards(sudoku_cells, candidate: int, unused_candidates: list,
+                   cell: Cell, row_index: int, column_index: int, direction_forward:bool) -> Tuple[int, int, bool]:
+    if len(unused_candidates) >= 1:
+        old_candidate = cell.change_used(candidate)
+
+        append(sudoku_cells, old_candidate, row_index, column_index)
+        exclude(sudoku_cells, candidate, row_index, column_index)
+
+        direction_forward = True
+        logging.debug(f"can:{candidate} old_can:{old_candidate} r:{row_index} c:{column_index} cell:{cell}"
+                     f" dir:{direction_forward}")
+        row_index, column_index = get_next_indexes(row_index, column_index)
+    else:
+        candidate = cell.current()
+        append(sudoku_cells, candidate, row_index, column_index)
+
+        cell.refresh_all([State.Expire, State.Used])
+
+        logging.debug(f"can:{candidate}: r:{row_index} c:{column_index} cell:{cell} dir:{direction_forward}")
+        row_index, column_index = get_prev_indexes(row_index, column_index)
+    return (row_index, column_index, direction_forward)
 
 
 if __name__ == '__main__':
