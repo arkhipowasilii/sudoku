@@ -49,6 +49,7 @@ class Cell:
     def refresh_one(self, candidate: int):
         if candidate in self.candidates.keys():
             if self.candidates[candidate] == State.Excluded:
+                debug(f"changed_candidate -> {candidate}")
                 self.candidates[candidate] = State.Unused
 
     def refresh_all(self, states: list):

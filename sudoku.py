@@ -95,7 +95,7 @@ def main(sudoku: List[List[int]]):
             if len(cell.candidates) > 1:
                 cell.delete_list(set(box_nums[num_box[(row_index, column_index)]] + row_nums[row_index] + column_nums[column_index]))
 
-    return solve_cell_sudoku(sudoku_cells)
+    return sudoku_cells
 
 
 def solve_cell_sudoku(sudoku_cells):
@@ -104,20 +104,20 @@ def solve_cell_sudoku(sudoku_cells):
     column_index = 0
     direction_forward = True
 
+    def get_candidate(candidates, message):
+        candidate = choice(candidates)
+        logging.debug(f"{message}can: {candidate}")
+        return candidate
+
     while not is_correct:
         if row_index > 8:
             return sudoku_cells
-
-        def get_candidate(candidates, message):
-            candidate = choice(candidates)
-            logging.debug(f"{message}can: {candidate}")
-            return candidate
 
         cell = sudoku_cells[row_index][column_index]
         unused_candidates = cell.get_unused()
 
         if len(unused_candidates) != 0:
-            candidate = get_candidate(unused_candidates, )
+            candidate = get_candidate(unused_candidates, 'xxx')
 
         if len(cell.candidates) == 1:
             if direction_forward:
@@ -222,8 +222,8 @@ if __name__ == '__main__':
               [0, 0, 0, 0, 0, 0, 0, 9, 1],
               [8, 0, 0, 7, 4, 0, 0, 0, 0]]
 
-    solved_sudoku = main(sudoku)
-
+    prepared_sudoku = main(sudoku)
+    solved_sudoku = solve_cell_sudoku(prepared_sudoku)
     for row in solved_sudoku:
         for num in row:
             print(num.current())
