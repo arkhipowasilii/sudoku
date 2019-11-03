@@ -22,7 +22,7 @@ def exclude(sudoku, candidate: int, row_index: int, column_index: int):
 
 def append(sudoku, candidate: int, row_index: int, column_index: int):
     dependent_indexes = get_dependent_indexes(sudoku, candidate, row_index, column_index)
-    logging.debug(f"{candidate} -> ({row_index}, {column_index}) : {dependent_indexes}")
+    logging.debug(f"APPEND {candidate} -> ({row_index}, {column_index}) : {dependent_indexes}")
     for i_index, j_index in dependent_indexes:
 
         sudoku[i_index][j_index].refresh_one(candidate)
@@ -104,9 +104,9 @@ def solve_cell_sudoku(sudoku_cells):
     column_index = 0
     direction_forward = True
 
-    def get_candidate(candidates, message):
+    def get_candidate(candidates, message1, message2):
         candidate = choice(candidates)
-        logging.debug(f"{message}can: {candidate}")
+        logging.debug(f"{message2} can: {candidate} {message1}")
         return candidate
 
     while not is_correct:
@@ -117,15 +117,15 @@ def solve_cell_sudoku(sudoku_cells):
         unused_candidates = cell.get_unused()
 
         if len(unused_candidates) != 0:
-            candidate = get_candidate(unused_candidates, 'xxx')
+            candidate = get_candidate(unused_candidates, f"r:{row_index} c:{column_index} dir:{direction_forward} cell_candidates:{cell.__str__()}", f"CHOO_CAN")
 
         if len(cell.candidates) == 1:
             if direction_forward:
                 row_index, column_index = get_next_indexes(row_index, column_index)
-                logging.debug(f"filled cell, dir:{direction_forward}")
+                logging.debug(f"FILLED_CELL dir:{direction_forward}")
             else:
                 row_index, column_index = get_prev_indexes(row_index, column_index)
-                logging.debug(f"filled cell, dir:{direction_forward}")
+                logging.debug(f"FILLED_CELL dir:{direction_forward}")
             continue
 
         if direction_forward:
@@ -175,11 +175,13 @@ def moving_forward(sudoku_cells, candidate: int, unused_candidates: list,
         cell.use(candidate)
         exclude(sudoku_cells, candidate, row_index, column_index)
         row_index, column_index = get_next_indexes(row_index, column_index)
-        logging.debug(f"can:{candidate}: r:{row_index} c:{column_index} cell:{cell} dir:{direction_forward}")
+        logging.debug(f"MOOVING can:{candidate}: r:{row_index} c:{column_index} dir:{direction_forward} cell_candidates:{cell.__str__()}")
     else:
         cell.refresh_all([State.Expire, State.Used])
         direction_forward = False
-        logging.debug(f"can:{candidate}: r:{row_index} c:{column_index} cell:{cell} dir:{direction_forward}")
+
+        logging.debug(f"TURNING BACKWARDS")
+        logging.debug(f"MOOVING can:{candidate}: r:{row_index} c:{column_index} dir:{direction_forward} cell_candidates:{cell.__str__()}")
 
         row_index, column_index = get_prev_indexes(row_index, column_index)
 
@@ -195,8 +197,10 @@ def moving_backwards(sudoku_cells, candidate: int, unused_candidates: list,
         exclude(sudoku_cells, candidate, row_index, column_index)
 
         direction_forward = True
-        logging.debug(f"can:{candidate} old_can:{old_candidate} r:{row_index} c:{column_index} cell:{cell}"
-                     f" dir:{direction_forward}")
+
+        logging.debug(f"TURNING FORWARD")
+        logging.debug(f"MOOVING can:{candidate} old_can:{old_candidate} r:{row_index} c:{column_index} dir:{direction_forward}"
+                      f" cell_candidates:{cell.__str__()}")
         row_index, column_index = get_next_indexes(row_index, column_index)
     else:
         candidate = cell.current()
@@ -204,7 +208,8 @@ def moving_backwards(sudoku_cells, candidate: int, unused_candidates: list,
 
         cell.refresh_all([State.Expire, State.Used])
 
-        logging.debug(f"can:{candidate}: r:{row_index} c:{column_index} cell:{cell} dir:{direction_forward}")
+        logging.debug(f"MOOVING can:{candidate}: r:{row_index} c:{column_index}  dir:{direction_forward}"
+                      f" cell_candidates:{cell.__str__()}")
         row_index, column_index = get_prev_indexes(row_index, column_index)
     return (row_index, column_index, direction_forward)
 

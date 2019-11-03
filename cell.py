@@ -14,6 +14,13 @@ class Cell:
         self.candidates = {i: State.Unused for i in range(1, 10)}
         self.prev = prev
 
+    def __str__(self):
+        result = ''
+        for key, value in self.candidates.items():
+            result = f"{result} {key}:{value.name}"
+
+        return result
+
     def current(self) -> int or None:
         for candidate, state in self.candidates.items():
             if state == State.Used:
@@ -49,7 +56,6 @@ class Cell:
     def refresh_one(self, candidate: int):
         if candidate in self.candidates.keys():
             if self.candidates[candidate] == State.Excluded:
-                debug(f"changed_candidate -> {candidate}")
                 self.candidates[candidate] = State.Unused
 
     def refresh_all(self, states: list):
