@@ -73,6 +73,18 @@ def get_next_indexes(row_index: int, column_index: int):
         return row_index + 1, 0
 
 
+def get_current_sudoku(sudoku_cells):
+    for row in sudoku_cells:
+        row_cells =[]
+        for cell in row:
+            current = cell.current()
+            if current is not None:
+                row_cells.append(f"{current}")
+            else:
+                row_cells.append('_')
+        logging.debug(row_cells)
+
+
 def main(sudoku: List[List[int]]):
     sudoku_cells = [[Cell() for i in range(0, 9)] for j in range(0, 9)]
 
@@ -136,6 +148,7 @@ def solve_cell_sudoku(sudoku_cells):
             row_index, column_index, direction_forward = moving_backwards(sudoku_cells, candidate, unused_candidates,
                                                                           cell, row_index, column_index,
                                                                           direction_forward)
+        get_current_sudoku(sudoku_cells)
         # if direction_forward:
         #     # 1. Куда попадает исходно заполненная ячейка?
         #
@@ -174,8 +187,8 @@ def moving_forward(sudoku_cells, candidate: int, unused_candidates: list,
     if len(unused_candidates) >= 1:
         cell.use(candidate)
         exclude(sudoku_cells, candidate, row_index, column_index)
-        row_index, column_index = get_next_indexes(row_index, column_index)
         logging.debug(f"MOOVING can:{candidate}: r:{row_index} c:{column_index} dir:{direction_forward} cell_candidates:{cell.__str__()}")
+        row_index, column_index = get_next_indexes(row_index, column_index)
     else:
         cell.refresh_all([State.Expire, State.Used])
         direction_forward = False
@@ -211,6 +224,7 @@ def moving_backwards(sudoku_cells, candidate: int, unused_candidates: list,
         logging.debug(f"MOOVING can:{candidate}: r:{row_index} c:{column_index}  dir:{direction_forward}"
                       f" cell_candidates:{cell.__str__()}")
         row_index, column_index = get_prev_indexes(row_index, column_index)
+
     return (row_index, column_index, direction_forward)
 
 
