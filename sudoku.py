@@ -37,8 +37,8 @@ def get_dependent_indexes(sudoku, candidate: int, old_row_index, old_column_inde
         if candidate in sudoku[row_index][column_index].candidates:
             current_indexes = get_all_related_indexes(row_index, column_index)
 
-            if old_indexes in all_related_indexes:
-                all_related_indexes.remove(old_indexes)
+            if old_indexes in current_indexes:
+                current_indexes.remove(old_indexes)
             for i, j in current_indexes:
                 cell = sudoku[i][j]
                 if cell.current() == candidate:
@@ -106,6 +106,9 @@ def main(sudoku: List[List[int]]):
         for column_index, cell in enumerate(sudoku_cells[row_index]):
             if len(cell.candidates) > 1:
                 cell.delete_list(set(box_nums[num_box[(row_index, column_index)]] + row_nums[row_index] + column_nums[column_index]))
+                if len(cell.candidates) == 1:
+                    for candidate in cell.candidates:
+                        cell.candidates[candidate] = State.Used
 
     return sudoku_cells
 
@@ -132,12 +135,11 @@ def solve_cell_sudoku(sudoku_cells):
             candidate = get_candidate(unused_candidates, f"r:{row_index} c:{column_index} dir:{direction_forward} cell_candidates:{cell.__str__()}", f"CHOO_CAN")
 
         if len(cell.candidates) == 1:
+            logging.debug(f"FILLED_CELL dir:{direction_forward}")
             if direction_forward:
                 row_index, column_index = get_next_indexes(row_index, column_index)
-                logging.debug(f"FILLED_CELL dir:{direction_forward}")
             else:
                 row_index, column_index = get_prev_indexes(row_index, column_index)
-                logging.debug(f"FILLED_CELL dir:{direction_forward}")
             continue
 
         if direction_forward:
@@ -231,15 +233,15 @@ def moving_backwards(sudoku_cells, candidate: int, unused_candidates: list,
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
 
-    sudoku = [[0, 0, 0, 0, 6, 0, 7, 0, 0],
-              [0, 5, 9, 0, 0, 0, 0, 0, 0],
-              [0, 1, 0, 2, 0, 0, 0, 0, 0],
-              [0, 0, 0, 1, 0, 0, 0, 0, 0],
-              [6, 0, 0, 5, 0, 0, 0, 0, 0],
-              [3, 0, 0, 0, 0, 0, 4, 6, 0],
-              [0, 0, 0, 0, 0, 0, 0, 0, 0],
-              [0, 0, 0, 0, 0, 0, 0, 9, 1],
-              [8, 0, 0, 7, 4, 0, 0, 0, 0]]
+    sudoku = [[1, 0, 0, 0, 3, 0, 0, 0, 8],
+              [0, 3, 0, 8, 0, 2, 0, 4, 0],
+              [0, 0, 7, 0, 0, 0, 5, 0, 0],
+              [0, 4, 0, 6, 0, 8, 0, 5, 0],
+              [5, 0, 0, 0, 9, 0, 0, 0, 6],
+              [0, 9, 0, 5, 0, 3, 0, 7, 0],
+              [0, 0, 4, 0, 0, 0, 2, 0, 0],
+              [0, 5, 0, 2, 0, 1, 0, 9, 0],
+              [9, 0, 0, 0, 4, 0, 0, 0, 7]]
 
     prepared_sudoku = main(sudoku)
     solved_sudoku = solve_cell_sudoku(prepared_sudoku)
